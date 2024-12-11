@@ -20,7 +20,23 @@ const urls = [
     'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
     'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
 ];
- 
+
+const url = 'https://cssbuy.com/item-micro-7240628629.html';
+// 使用正则表达式提取信息
+const regex = /item-(?:\w+-)?(\d+)\.html/; // 适应没有前缀和连接符的情况
+const match = url.match(regex);
+
+if (match) {
+    const number = match[1]; // 提取的数字
+    const prefixMatch = url.match(/item-(\w+)(?=-)/); // 提取前缀（如果存在）
+    const prefix = prefixMatch ? prefixMatch[1] : "没有前缀"; // 如果有前缀则返回，否则返回默认值
+    
+    console.log(`提取的前缀: ${prefix}`);
+    console.log(`提取的数字: ${number}`);
+} else {
+    console.log('未能匹配到所需的信息');
+}
+
 // // 创建一个 axios 实例
 // const instance = axios.create({
 //     maxRedirects: 0 // 禁用自动重定向

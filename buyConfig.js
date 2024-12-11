@@ -32,7 +32,10 @@ export class buyConfig {
         "youtu.be":{},
     };
     foreignHostParams = {
-        "tinyurl.com":{"example":"http://tinyurl.com/Burberry-Sneaker"},//这个会跳转到cnfans里面去
+        "tinyurl.com":{//这个如：http://tinyurl.com/Burberry-Sneaker，会跳转到cnfans里面去
+            "redirect": 1,
+            "redirect_template": "cnfans.com"
+        },
         "cnfans.com":{
             "template":"https://cnfans.com/product/?id=%s&shop_type=%s",
             "keys":["id", "shop_type"],
@@ -55,6 +58,10 @@ export class buyConfig {
                 "ali_1688":this.domesticHostTemplate["1688.com"]
             },
         },
+        "hoobuy.cc":{//这个：https://hoobuy.cc/nE5kJZdR，会跳转到hoobuy.com
+            "redirect": 1,
+            "redirect_template": "hoobuy.com"
+        },
         "oopbuy.com":{//https://oopbuy.com/product/0/652894214777;0-1688,1-taobao,2-weidian，这个有两个模板
             "template":"https://oopbuy.com/goods/details?id=%s&channel=%s",
             "keys":["id", "channel"],
@@ -65,17 +72,6 @@ export class buyConfig {
                 "taobao":this.domesticHostTemplate["taobao.com"],
                 "1688":this.domesticHostTemplate["1688.com"],
             },
-        },
-        "hoobuy.cc":{//这个：https://hoobuy.cc/nE5kJZdR，会跳转到hoobuy.com
-            "template":"https://hoobuy.com/product/%s/%s",
-            "keys":[],
-            "id_key":"",
-            "shop_key":"",
-            "shop_key_enum":{
-                "0":this.domesticHostTemplate["1688.com"],
-                "1":this.domesticHostTemplate["taobao.com"],
-                "2":this.domesticHostTemplate["weidian.com"]
-            }
         },
         "hoobuy.com":{
             "template":"https://hoobuy.com/product/%s/%s",
@@ -90,34 +86,27 @@ export class buyConfig {
         },
         "cssbuy.com":{
             "template":"https://cssbuy.com/item-%s-%s.html",
-            "keys":[],
-            "id_key":"",
-            "shop_key":"",
+            "keys":[/item-(?:\w+-)?(\d+)\.html/,/item-(\w+)(?=-)/],
+            "id_key":/item-(?:\w+-)?(\d+)\.html/,
+            "shop_key":/item-(\w+)(?=-)/,
             "shop_key_enum":{
                 "micro":this.domesticHostTemplate["weidian.com"],
-                "":this.domesticHostTemplate["taobao.com.com"],//如果是淘宝的话，这里是空的，第一个%s是没有值的
+                "taobao":this.domesticHostTemplate["taobao.com.com"],//如果是淘宝的话，这里是空的，第一个%s是没有值的
                 "1688":this.domesticHostTemplate["1688.com"],
-
             }
         },
-        "acbuy.com":{//allchinabuy的短链，需要抓取跳转后的链接,跳转后的商品链接是url参数，淘宝跟天猫是用的同样的链接格式，会跳转到正常的taobao和天猫域名
-            "template":"https://www.allchinabuy.com/en/page/buy/?url=%s",//这个%s是各个国内的链接
-            "keys":["url"],//可以直接拿到国内的链接
-            "id_key":"",
-            "shop_key":"",
-            "shop_key_enum":{}
+        "acbuy.com":{//这个如：https://l.acbuy.com/ax/855771584，会跳转到allchinabuy.com
+            "redirect":1,
+            "redirect_template":"allchinabuy.com"
         },
         "allchinabuy.com":{
             "template":"https://www.allchinabuy.com/en/page/buy/?url=%s",//这个%s是各个国内的链接
             "keys":["url"],//可以直接拿到国内的链接
-            "id_key":"",
-            "shop_key":"",
-            "shop_key_enum":{}
+            "isGetDomestic":1,//这里直接用国内链接解析
         },
         "allapp.link":{
 
         }
-
     };
     foreignHostParamsWithContent = {
         "yupoo.com":{}
