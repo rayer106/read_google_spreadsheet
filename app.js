@@ -1,35 +1,75 @@
 import { readSpreadSheet, readTaobao, readAli1688 } from './puppeteerCrawler.js';
 import { main } from './googleApiReader.js';
-import { buyDataParse, getDataFromWeidian, getDataFromTaobao, getDataFromAli1688} from './buyDataParse.js';
-//import { getDomesticUrls, getStandardUrls } from './buyConfig.js';
+import {buyDataParse} from './buyDataParse.js';
+import {buyConfig} from './buyConfig.js';
+import axios from 'axios';
 // 执行主函数
-//const url = getDomesticUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
-//const rawurl = getStandardUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+// const buy_config = new buyConfig();
+// const url = buy_config.getDomesticUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+// const rawurl = buy_config.getStandardUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
 const urls = [
-    'https://docs.google.com/spreadsheets/d/1d8d3BLMxaUomRufs6aWnssNY5RWEXPl5kbUO-8Be-5Y/edit?gid=402318860#gid=402318860',
+    // 'https://docs.google.com/spreadsheets/d/1d8d3BLMxaUomRufs6aWnssNY5RWEXPl5kbUO-8Be-5Y/edit?gid=402318860#gid=402318860',
     // 'https://docs.google.com/spreadsheets/d/1UWW5tnFU_9ENnHjScnC7ohWx9bgwER92gSEvV57dJlk/edit?gid=0#gid=0',
     // 'https://docs.google.com/spreadsheets/d/1NBjLdRjfgDKFeFg-gQJ094wdppi1HMpZyNSd0MzUSas/edit?gid=0#gid=0',
     // 'https://docs.google.com/spreadsheets/d/1n2_c818R24PV9cFnWOz2PF0HnC4pKaEoss--UBVSHtY/edit?gid=1718005552#gid=1718005552',
     // 'https://docs.google.com/spreadsheets/d/1tMuQqvnYzjdsh5cMPsEORdFYtOpf-jg6dNMM1Roik3Q/edit?gid=40502416#gid=40502416',
-    // 'https://docs.google.com/spreadsheets/d/1VOxuSTYDX7Lt4rdrr4hRZ_EwY6pr9h69iPLHyvae_MU/edit?gid=1139652394#gid=1139652394',
-    // 'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
-    // 'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
-    // 'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
-    // 'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
-    // 'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
+    'https://docs.google.com/spreadsheets/d/1VOxuSTYDX7Lt4rdrr4hRZ_EwY6pr9h69iPLHyvae_MU/edit?gid=1139652394#gid=1139652394',
+    'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
+    'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
+    'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
+    'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
+    'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
 ];
+ 
+// // 创建一个 axios 实例
+// const instance = axios.create({
+//     maxRedirects: 0 // 禁用自动重定向
+// });
+// let url = "";
+// // 监听重定向事件
+// instance.interceptors.response.use(null, (error) => {
+//     const { response } = error;
+//     if (response && (response.status === 301 || response.status == 302)) {
+//         // 处理301重定向，例如记录日志或者其他逻辑
+//         console.log('重定向到:', response.headers.location);
+//         url = response.headers.location;
+//     }
+//     // 之后你可以选择如何处理错误，比如重新请求或者抛出错误
+//     //return Promise.reject(error);
+// });
+// // 使用该实例发送请求
+// await instance.get('http://tinyurl.com/Burberry-Sneaker');
+// console.log("url:",url);
 
-for (const element of urls) {
-    const _ret = await main(element);
-    await buyDataParse(_ret);
-};
-
+// const urlMaps = new Map();
+// for (const element of urls) {
+//     const _ret = await main(element);
+//     for (const [category, items] of _ret) {
+//         //console.log(`Category: ${category}`);
+//         for(let item of items) {
+//             //console.log(`  ${item.link}`);
+//             try {
+//                 const url = new URL(item.link); // 使用 URL 对象来解析链接
+//                 const hostParts = url.host.split('.');
+//                 const host = hostParts.slice(-2).join('.');
+    
+//                 // 仅当主机在 hostsName 中时才添加链接
+//                 if (!urlMaps.has(host)) {
+//                     console.log(`  hostsName ${host}:`, item.link);
+//                     urlMaps.set(host, []);
+//                 }
+//                 //urlMaps.get(host).push(link);
+//             } catch (e) {
+//                 console.error(`Invalid URL: ${link}:`, e.message);
+//             }
+//         }
+//     }
+//     //await buyDataParse(_ret);
+// };
+// const dataParse = new buyDataParse();
 //await getDataFromTaobao("https://item.taobao.com/item.htm?id=772459929808");
-
 //await getDataFromAli1688("https://detail.1688.com/offer/769199890261.html");
-
-//await getDataFromWeidian("https://weidian.com/item.html?itemID=7293684807");
-
+// const data = await dataParse.getDataFromWeidian("https://weidian.com/item.html?itemID=7293684807");
+// console.log(data);
 //await readTaobao("https://item.taobao.com/item.htm?id=772459929808");
-
 //await readAli1688("https://detail.1688.com/offer/769199890261.html");
