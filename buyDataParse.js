@@ -6,12 +6,13 @@ import fs from 'fs';
 export class buyDataParse {
 
     async dataParse(map) {
+        const config = new buyConfig();
         // 遍历 Map，category是工作表名称，items是工作表中的数据
         for (const [category, items] of map) {
             console.log(`Category: ${category}`);
             for(let item of items) {
                 console.log(`  ${item.link}`);
-                let domesticLink = buyConfig.getDomesticUrls(item.link);
+                let domesticLink = config.getDomesticUrls(item.link);
                 if(!domesticLink) {
                     console.log(`link is null`);
                     continue;
