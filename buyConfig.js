@@ -1,4 +1,6 @@
 import { format } from 'util';
+import axios from 'axios';
+
 export class buyConfig {
     // 允许的主机名，必需的参数是template和keys,其他参数的是根据这两个参数来定的
     // 规则：
@@ -33,7 +35,7 @@ export class buyConfig {
     };
     foreignHostParams = {
         "tinyurl.com":{//这个如：http://tinyurl.com/Burberry-Sneaker，会跳转到cnfans里面去
-            "handler":this.handleSearchParams.bind(this, "foreignHostParams","cnfans.com", true),
+            "handler":this.handleSearchParams.bind(this, "foreignHostParams","cnfans.com","",true),
         },
         "cnfans.com":{
             "template":"https://cnfans.com/product/?id=%s&shop_type=%s",
@@ -45,7 +47,7 @@ export class buyConfig {
                 "taobao":this.domesticHostTemplate["taobao.com"],
                 "ali_1688":this.domesticHostTemplate["1688.com"]
             },
-            "handler":this.handleSearchParams.bind(this, "foreignHostParams","cnfans.com"),
+            "handler":this.handleSearchParams.bind(this, "foreignHostParams","cnfans.com","",false),
         },
         "joyabuy.com":{
             "template":"https://joyabuy.com/product/?id=%s&shop_type=%s",
@@ -57,22 +59,35 @@ export class buyConfig {
                 "taobao":this.domesticHostTemplate["taobao.com"],
                 "ali_1688":this.domesticHostTemplate["1688.com"]
             },
-            "handler":this.handleSearchParams.bind(this, "foreignHostParams","joyabuy.com"),
+            "handler":this.handleSearchParams.bind(this, "foreignHostParams","joyabuy.com","",false),
         },
-        "oopbuy.com":{//https://oopbuy.com/product/0/652894214777;0-1688,1-taobao,2-weidian，这个有两个模板
-            "template":"https://oopbuy.com/goods/details?id=%s&channel=%s",
-            "keys":["id", "channel"],
-            "id_key":"id",
-            "shop_key":"channel",
-            "shop_key_enum":{
-                "weidian":this.domesticHostTemplate["weidian.com"],
-                "taobao":this.domesticHostTemplate["taobao.com"],
-                "1688":this.domesticHostTemplate["1688.com"],
+        "oopbuy.com":{
+            "params":{
+                "template":"https://oopbuy.com/goods/details?id=%s&channel=%s",
+                "keys":["id", "channel"],
+                "id_key":"id",
+                "shop_key":"channel",
+                "shop_key_enum":{
+                    "weidian":this.domesticHostTemplate["weidian.com"],
+                    "taobao":this.domesticHostTemplate["taobao.com"],
+                    "1688":this.domesticHostTemplate["1688.com"],
+                },
             },
-            "handler":this.handleSearchParams.bind(this, "foreignHostParams","oopbuy.com"),
+            "path":{
+                "template":"https://oopbuy.com/product/%s/%s",
+                "keys":[/product\/(\d+)\/(\d+)/],
+                "id_key":/product\/\d+\/(\d+)/,
+                "shop_key":/product\/(\d+)\/\d+/,
+                "shop_key_enum":{
+                    "2":this.domesticHostTemplate["weidian.com"],
+                    "1":this.domesticHostTemplate["taobao.com"],
+                    "0":this.domesticHostTemplate["1688.com"],
+                },
+            },
+            "handler":this.handleMultiTemplate.bind(this, "foreignHostParams","oopbuy.com","",false),
         },
         "hoobuy.cc":{//这个：https://hoobuy.cc/nE5kJZdR，会跳转到hoobuy.com
-            "handler":this.handlePathParams.bind(this, "foreignHostParams","hoobuy.com", true),
+            "handler":this.handlePathParams.bind(this, "foreignHostParams","hoobuy.com","",true),
         },
         "hoobuy.com":{
             "template":"https://hoobuy.com/product/%s/%s",
@@ -84,7 +99,7 @@ export class buyConfig {
                 "1":this.domesticHostTemplate["taobao.com"],
                 "2":this.domesticHostTemplate["weidian.com"]
             },
-            "handler":this.handlePathParams.bind(this, "foreignHostParams","hoobuy.com"),
+            "handler":this.handlePathParams.bind(this, "foreignHostParams","hoobuy.com","",false),
         },
         "cssbuy.com":{
             "template":"https://cssbuy.com/item-%s-%s.html",
@@ -96,15 +111,15 @@ export class buyConfig {
                 "taobao":this.domesticHostTemplate["taobao.com.com"],//如果是淘宝的话，这里是空的，第一个%s是没有值的
                 "1688":this.domesticHostTemplate["1688.com"],
             },
-            "handler":this.handlePathParams.bind(this, "foreignHostParams","cssbuy.com"),
+            "handler":this.handlePathParams.bind(this, "foreignHostParams","cssbuy.com","",false),
         },
         "acbuy.com":{//这个如：https://l.acbuy.com/ax/855771584，会跳转到allchinabuy.com
-            "handler":this.handleSearchParamsUrl.bind(this, "foreignHostParams","allchinabuy.com", true),
+            "handler":this.handleSearchParamsUrl.bind(this, "foreignHostParams","allchinabuy.com","",true),
         },
         "allchinabuy.com":{
             "template":"https://www.allchinabuy.com/en/page/buy/?url=%s",//这个%s是各个国内的链接
             "url_key":"url",//可以直接拿到国内的链接
-            "handler":this.handleSearchParamsUrl.bind(this, "foreignHostParams","allchinabuy.com"),
+            "handler":this.handleSearchParamsUrl.bind(this, "foreignHostParams","allchinabuy.com","",false),
         },
         "allapp.link":{
 
@@ -115,6 +130,16 @@ export class buyConfig {
     };
 
     hostTemplate = Object.assign({}, this.domesticHostTemplate, this.foreignHostParams);
+    
+    getRootHost(rawUri){
+        try {
+            const hostParts = rawUri.host.split('.');
+            return hostParts.slice(-2).join('.'); 
+        } catch (err) {
+            console.error(`getRootHost:${err.message}`);
+            return null;
+        }
+    }
 
     async getRedirectUrl(rawUri){
         try{
@@ -142,9 +167,15 @@ export class buyConfig {
         }
     }
 
-    async handleSearchParamsUrl(params, rootHost, isRedirect = false, rawUri) {
-        //console.log('this:',this[params][rootHost]);
-        //console.log('rawUri:',rawUri);
+    async handleMultiTemplate(params, rootHost, subParam, isRedirect, rawUri) {
+        if(rawUri.searchParams.get("channel")){
+            this.handleSearchParams(params, rootHost, "params", isRedirect, rawUri);
+        } else {
+            this.handlePathParams(params, rootHost, "path", isRedirect, rawUri);
+        }
+    }
+
+    async handleSearchParamsUrl(params, rootHost, subParam, isRedirect, rawUri) {
         try {
             let url = null;
             if(isRedirect) {
@@ -153,22 +184,25 @@ export class buyConfig {
                     throw new Error("获取重定向地址失败:"+rawUri.href);
                 }
             }
-            const redirectUri = new URL(url);
-            const hostConfig = this[params][rootHost];
+            const redirectUri = new URL(url?url:rawUri.href);
+            let hostConfig = null;
+            if(subParam !== ""){
+                hostConfig = this[params][rootHost][subParam];
+            } else {
+                hostConfig = this[params][rootHost];
+            }            
             const domesticUri = redirectUri.searchParams.get(hostConfig.url_key);
             if(!domesticUri){
                 throw new Error(`缺少参数：${hostConfig.domesticUri}`);
             }
-            return this.getStandardUrls(domesticUri);
+            return this.formatUrl(domesticUri, this.domesticHostTemplate);
         } catch (err) {
             console.error(`handleSearchParamsUrl:${err.message}`);
             return null;
         }
     }
 
-    async handlePathParams(params, rootHost, isRedirect = false, rawUri) {
-        //console.log('this:',this[params][rootHost]);
-        //console.log('rawUri:',rawUri);
+    async handlePathParams(params, rootHost, subParam, isRedirect, rawUri) {
         try {
             let url = rawUri.href;
             if(isRedirect) {
@@ -177,9 +211,14 @@ export class buyConfig {
                     throw new Error("获取重定向地址失败");
                 }
             }
-            const itemID = "";
-            const shopType = "";
-            const hostConfig = this[params][rootHost];
+            let itemID = "";
+            let shopType = "";
+            let hostConfig = null;
+            if(subParam !== ""){
+                hostConfig = this[params][rootHost][subParam];
+            } else {
+                hostConfig = this[params][rootHost];
+            }            
             if(rootHost === "cssbuy.com"){
                 // const url = 'https://cssbuy.com/item-micro-7240628629.html';
                 // 使用正则表达式提取信息
@@ -189,23 +228,19 @@ export class buyConfig {
                     itemID = match[1]; // 提取的数字
                     const prefixMatch = url.match(hostConfig.shop_key); // 提取前缀（如果存在）
                     shopType = prefixMatch ? prefixMatch[1] : "taobao"; // 如果有前缀则返回，否则返回默认值
-                    console.log(`提取的前缀: ${prefix}`);
-                    console.log(`提取的数字: ${number}`);
                 } else {
-                    console.log('未能匹配到所需的信息');
+                    throw new Error('handlePathParams:未能匹配到所需的信息');
                 }
             } else {
                 const match = url.match(hostConfig.keys[0]);
                 if (match) {
                     shopType = match[1];
                     itemID = match[2];
-                    console.log(`First number: ${shopType}`);
-                    console.log(`Second number: ${itemID}`);
                 } else {
-                    console.log("No match found");
+                    throw new Error("handlePathParams:No match found");
                 }
             }
-            return this.getDomesticUrl(hostConfig, shopType, itemID);
+            return this.formatDomesticUrl(hostConfig, shopType, itemID);
         } catch (err) {
             console.error(`handlePathParams:${err.message}`);
             return null;
@@ -213,19 +248,22 @@ export class buyConfig {
         //在这里处理国内平台链接
     }
 
-    async handleSearchParams(params, rootHost, isRedirect = false, rawUri) {
-        //console.log('this:',this[params][rootHost]);
-        //console.log('rawUri:',rawUri);
+    async handleSearchParams(params, rootHost, subParam, isRedirect, rawUri) {
         try {
-            let url = rawUri.href;
+            let url = null;
             if(isRedirect) {
                 url = await this.getRedirectUrl(rawUri);
                 if(!url){
                     throw new Error("handleSearchParams:获取重定向地址失败");
                 }
             }
-            const redirectUri = new URL(url);
-            const hostConfig = this[params][rootHost];
+            const redirectUri = new URL(url?url:rawUri.href);
+            let hostConfig = null;
+            if(subParam !== ""){
+                hostConfig = this[params][rootHost][subParam];
+            } else {
+                hostConfig = this[params][rootHost];
+            }            
             const shopType = redirectUri.searchParams.get(hostConfig.shop_key);
             if(!shopType){
                 throw new Error(`handleSearchParams:缺少参数:shopType`);
@@ -234,14 +272,14 @@ export class buyConfig {
             if(!id){
                 throw new Error(`handleSearchParams:缺少参数:id`);
             }
-            return this.getDomesticUrl(hostConfig, shopType, id);
+            return this.formatDomesticUrl(hostConfig, shopType, id);
         } catch (err) {
             console.error(`handleSearchParams:${err.message}`);
             return null;
         }
     }
     
-    getDomesticUrl(hostConfig, shopType, id){
+    formatDomesticUrl(hostConfig, shopType, id){
         try {
             const shop_key_enums = Object.keys(hostConfig.shop_key_enum);
             if(!shop_key_enums.includes(shopType)){
@@ -249,42 +287,32 @@ export class buyConfig {
             }
             const domesticTemplate = hostConfig.shop_key_enum[shopType].template;
             const domesticUri = format(domesticTemplate, id);
-            console.log(`getDomesticUrls:`, domesticUri);
+            console.log(`formatDomesticUrl:`, domesticUri);
             return domesticUri;
         }catch (err) {
-            console.error(`getDomesticUrl:${err.message}`);
+            console.error(`formatDomesticUrl:${err.message}`);
             return null;
         }
     }
 
     //通过buy域名找国内的,用async是因为有可能要调用getRedirectUrl方法，这个方法是异步的
-    async getDomesticUrls(rawUriStr){
+    async getDomesticUrlByForeignHost(rawUriStr){
         try {
             let rawUri = new URL(rawUriStr);
             const rootHost = this.getRootHost(rawUri);
             const hostConfig = this.foreignHostParams[rootHost];
             if(!hostConfig){
-                throw new Error(`不支持的foreign域名:${rootHost}`);
+                throw new Error(`getDomesticUrlWithForeignHost:不支持的foreign域名:${rootHost}`);
             }
             return await hostConfig.handler(rawUri);
         } 
         catch (err) {
-            console.error("getDomesticUrls:"+err.message);
+            console.error("getDomesticUrlWithForeignHost:"+err.message);
             return null;
         }
     }
 
-    getRootHost(rawUri){
-        try {
-            const hostParts = rawUri.host.split('.');
-            return hostParts.slice(-2).join('.'); 
-        } catch (err) {
-            console.error(`getRootHost:${err.message}`);
-            return null;
-        }
-    }
-
-    getStandardUrls(rawUriStr){
+    getSocialAccountUrl(rawUriStr) {
         let rawUri = null;
         try {
             rawUri = new URL(rawUriStr);
@@ -293,9 +321,34 @@ export class buyConfig {
             return null;
         }
         const rootHost = this.getRootHost(rawUri);
-        const hostConfig = this.hostTemplate[rootHost];
+        const hostConfig = this.socialAccountTemplate[rootHost];
         if(!hostConfig){
-            console.error(`不支持的主机：${rootHost}`);
+            console.error(`getSocialAccount:不支持的主机:${rootHost}`);
+            return null;
+        }
+        return rawUriStr;
+    }
+
+    // getStandardUrls(rawUriStr){
+    //     return formatUrl(rawUriStr, this.hostTemplate);
+    // }
+
+    getFormatDomesticUrl(rawUriStr) {
+        return formatUrl(rawUriStr, this.domesticHostTemplate);
+    }
+
+    formatUrl(rawUriStr, urlTemplate) {
+        let rawUri = null;
+        try {
+            rawUri = new URL(rawUriStr);
+        } catch (err) {
+            console.error(err.message);
+            return null;
+        }
+        const rootHost = this.getRootHost(rawUri);
+        const hostConfig = urlTemplate[rootHost];
+        if(!hostConfig){
+            console.error(`formatUrl 不支持的host：${rootHost}`);
             return null;
         }
         const template = hostConfig.template;
@@ -312,22 +365,21 @@ export class buyConfig {
                 if(match && match.length > 1){
                     params[key] = match[1];
                 } else {
-                    console.error(`缺少参数：${key}`);
+                    console.error(`formatUrl 缺少参数：${key}`);
                     return null;
                 }
             }else{
-                console.error(`缺少参数：${key}`);
+                console.error(`formatUrl 缺少参数：${key}`);
                 return null;
             }
         }
-
         if (template) {
             // 使用 util.format 方法替换模板中的参数
             const retUri = format(template, ...Object.values(params));
-            console.log(`getStandardUrls:`, retUri);
+            console.log(`formatUrl:`, retUri);
             return retUri;
         } else {
-            console.error(`缺少模板`);
+            console.error(`formatUrl 缺少模板`);
             return null;
         }
     }

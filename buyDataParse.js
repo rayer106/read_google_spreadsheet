@@ -5,23 +5,42 @@ import fs from 'fs';
 
 export class buyDataParse {
 
-    async dataParse(map) {
+    async parse(map) {
         const config = new buyConfig();
         // 遍历 Map，category是工作表名称，items是工作表中的数据
+        // map返回了按工作表名称分类的所有link
+        // 要对link进行分类：社交账号，社交账号中的视频，国内商品链接，buy的链接
+        // 对商品链接要进行格式化，然后去重，最后再请求数据
+        const socialAccount = new Set();
+        const socialMedia = new Set();
+        const domesticUri = new Set();
         for (const [category, items] of map) {
             console.log(`Category: ${category}`);
             for(let item of items) {
+                //对链接分类，并去重
                 console.log(`  ${item.link}`);
-                let domesticLink = config.getDomesticUrls(item.link);
-                if(!domesticLink) {
-                    console.log(`link is null`);
+                let social = config.getSocialAccountUrl(item.link);
+                if(social) {//如果是社媒账号或者视频，则添加后继续下一个循环
+                    socialAccount.add(social);
                     continue;
                 }
-                const goodsContent = await getDataFromLink(domesticLink);
-                console.log("goods content:",goodsContent);
-                break;//TODO 这里是测试一个链接
+                let domesticLink = config.getFormatDomesticUrl(item.link);
+                if(domesticLink) {//如果本身就是国内格式
+                    domesticUri.add(domesticLink);
+                } else {
+                    domesticLink = await config.getDomesticUrlByForeignHost(item.link);
+                    if(domesticLink) {
+                        domesticUri.add(domesticLink);
+                    }
+                }
+                break;//TODO 这里测试一个链接
             }
-            break;//TODO 这里是测试一个工作表
+            break;//TODO 这里测试一个工作表
+        }
+        for(let domestic of domesticUri) {
+            const goodsContent = await this.getDataFromLink(domestic);
+            console.log("goods content:",goodsContent);
+            //TODO 这里需要处理数据，写数据库等
         }
     };
     

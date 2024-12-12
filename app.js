@@ -5,12 +5,19 @@ import {buyConfig} from './buyConfig.js';
 import axios from 'axios';
 // 执行主函数
  const buy_config = new buyConfig();
- buy_config.foreignHostParams['cnfans.com'].handler("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+ await buy_config.getDomesticUrlByForeignHost("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+ await buy_config.getDomesticUrlByForeignHost("http://tinyurl.com/Burberry-Sneaker");
+ await buy_config.getDomesticUrlByForeignHost("https://oopbuy.com/product/0/652894214777");
+ await buy_config.getDomesticUrlByForeignHost("https://hoobuy.cc/nE5kJZdR");
+ await buy_config.getDomesticUrlByForeignHost("https://hoobuy.com/product/2/7258665479?utm_source=share&utm_medium=product_details");
+ await buy_config.getDomesticUrlByForeignHost("https://cssbuy.com/item-micro-7240628629.html");
+ await buy_config.getDomesticUrlByForeignHost("https://l.acbuy.com/ax/855771584");
+
 //  const cnFans = buy_config.foreignHostParams['cnfans.com'];
 //  const cnFansHandler = buy_config.foreignHostParams['cnfans.com'].handler;
 //  cnFansHandler.call(cnFans);
 
-// const url = buy_config.getDomesticUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+// const url = buy_config.getDomesticUrlByForeignHost("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
 // const rawurl = buy_config.getStandardUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
 const urls = [
     // 'https://docs.google.com/spreadsheets/d/1d8d3BLMxaUomRufs6aWnssNY5RWEXPl5kbUO-8Be-5Y/edit?gid=402318860#gid=402318860',
@@ -62,31 +69,36 @@ const urls = [
 // await instance.get('http://tinyurl.com/Burberry-Sneaker');
 // console.log("url:",url);
 
-// const urlMaps = new Map();
-// for (const element of urls) {
-//     const _ret = await main(element);
-//     for (const [category, items] of _ret) {
-//         //console.log(`Category: ${category}`);
-//         for(let item of items) {
-//             //console.log(`  ${item.link}`);
-//             try {
-//                 const url = new URL(item.link); // 使用 URL 对象来解析链接
-//                 const hostParts = url.host.split('.');
-//                 const host = hostParts.slice(-2).join('.');
+const urlMaps = new Map();
+const dataParse = new buyDataParse();
+for (const element of urls) {//一个spread链接获取一次
+    const _ret = await main(element);
+    await dataParse.parse(_ret);
+    //下面是用来打印的
+    for (const [category, items] of _ret) {
+        //console.log(`Category: ${category}`);
+        for(let item of items) {
+            //console.log(`  ${item.link}`);
+            try {
+                const url = new URL(item.link); // 使用 URL 对象来解析链接
+                
+                const hostParts = url.host.split('.');
+                const host = hostParts.slice(-2).join('.');
     
-//                 // 仅当主机在 hostsName 中时才添加链接
-//                 if (!urlMaps.has(host)) {
-//                     console.log(`  hostsName ${host}:`, item.link);
-//                     urlMaps.set(host, []);
-//                 }
-//                 //urlMaps.get(host).push(link);
-//             } catch (e) {
-//                 console.error(`Invalid URL: ${link}:`, e.message);
-//             }
-//         }
-//     }
-//     //await buyDataParse(_ret);
-// };
+                // 仅当主机在 hostsName 中时才添加链接
+                if (!urlMaps.has(host)) {
+                    console.log(`  hostsName ${host}:`, item.link);
+                    urlMaps.set(host, []);
+                }
+                //urlMaps.get(host).push(link);
+            } catch (e) {
+                console.error(`Invalid URL: ${link}:`, e.message);
+            }
+        }
+    }
+    //await buyDataParse(_ret);
+};
+
 // const dataParse = new buyDataParse();
 //await getDataFromTaobao("https://item.taobao.com/item.htm?id=772459929808");
 //await getDataFromAli1688("https://detail.1688.com/offer/769199890261.html");
