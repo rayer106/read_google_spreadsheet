@@ -1,7 +1,7 @@
 import { readSpreadSheet, readTaobao, readAli1688 } from './puppeteerCrawler.js';
 import { main } from './googleApiReader.js';
-import {buyDataParse} from './buyDataParse.js';
-import {buyConfig} from './buyConfig.js';
+import { buyDataParse } from './buyDataParse.js';
+import { buyConfig } from './buyConfig.js';
 import axios from 'axios';
 import express from 'express';
 
@@ -18,21 +18,24 @@ app.use(express.json());
 app.post('/fetchData', (req, res) => {
     // Interaction type and data
     const { type, data } = req.body;
-    //console.log(req.body);
+    console.log(req.body);
     if (type === 1) {//这里是处理google spreadsheet
         try {
-            //const result = getGoogleSpreadsheetData(data);
-            return res.json({ success: true, result:data[0] });
+            //const result = this.getGoogleSpreadsheetData(data);
+            return res.json({ success: true, result: data[0] });
         } catch (error) {
-            console.error(error.message);
+            //console.error(error.message);
             return res.status(400).json({ success: false, message: error.message });
         }
-        //return res.send({ type: InteractionResponseType.PONG });
     }
 
-    if(type === 2){//这里是读取多个商品链接
-        splitUrls = data.split(',');
-        return res.send({});
+    if(type === 2){//这里是处理多个商品链接
+        const goodsList = new Set();
+        for(const item of data) {
+            const goods = this.getGoods(item);
+            goodsList.push(goods);
+        }
+        return res.send({ success: true, result: goodsList });
     }
 
     console.error('unknown interaction type', type);
