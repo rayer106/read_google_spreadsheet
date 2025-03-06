@@ -334,7 +334,7 @@ export class buyConfig {
     // }
 
     getFormatDomesticUrl(rawUriStr) {
-        return formatUrl(rawUriStr, this.domesticHostTemplate);
+        return this.formatUrl(rawUriStr, this.domesticHostTemplate);
     }
 
     formatUrl(rawUriStr, urlTemplate) {

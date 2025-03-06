@@ -26,11 +26,11 @@ const urls = [
     // 'https://docs.google.com/spreadsheets/d/1n2_c818R24PV9cFnWOz2PF0HnC4pKaEoss--UBVSHtY/edit?gid=1718005552#gid=1718005552',
     // 'https://docs.google.com/spreadsheets/d/1tMuQqvnYzjdsh5cMPsEORdFYtOpf-jg6dNMM1Roik3Q/edit?gid=40502416#gid=40502416',
     'https://docs.google.com/spreadsheets/d/1VOxuSTYDX7Lt4rdrr4hRZ_EwY6pr9h69iPLHyvae_MU/edit?gid=1139652394#gid=1139652394',
-    'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
-    'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
-    'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
-    'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
-    'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
+    //'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
+    //'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
+    //'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
+    //'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
+    //'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
 ];
 
 // const url = 'https://cssbuy.com/item-7240628629.html';
