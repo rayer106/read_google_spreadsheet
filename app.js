@@ -3,15 +3,104 @@ import { main } from './googleApiReader.js';
 import {buyDataParse} from './buyDataParse.js';
 import {buyConfig} from './buyConfig.js';
 import axios from 'axios';
+import express from 'express';
+
+// Create an express app
+const app = express();
+// Get port, or default to 3000
+const PORT = 3000;
+// 中间件：解析JSON请求体
+app.use(express.json());
+/**
+ * Interactions endpoint URL where Discord will send HTTP requests
+ * Parse request body and verifies incoming requests using discord-interactions package
+ */
+app.post('/fetchData', (req, res) => {
+    // Interaction type and data
+    const { type, data } = req.body;
+    //console.log(req.body);
+    if (type === 1) {//这里是处理google spreadsheet
+        try {
+            //const result = getGoogleSpreadsheetData(data);
+            return res.json({ success: true, result:data[0] });
+        } catch (error) {
+            console.error(error.message);
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        //return res.send({ type: InteractionResponseType.PONG });
+    }
+
+    if(type === 2){//这里是读取多个商品链接
+        splitUrls = data.split(',');
+        return res.send({});
+    }
+
+    console.error('unknown interaction type', type);
+    return res.status(400).json({ error: 'unknown interaction type' });
+});
+
+app.listen(PORT, () => {
+    console.log('Listening on port', PORT);
+});
+
+// const urls = [
+//     // 'https://docs.google.com/spreadsheets/d/1d8d3BLMxaUomRufs6aWnssNY5RWEXPl5kbUO-8Be-5Y/edit?gid=402318860#gid=402318860',
+//     // 'https://docs.google.com/spreadsheets/d/1UWW5tnFU_9ENnHjScnC7ohWx9bgwER92gSEvV57dJlk/edit?gid=0#gid=0',
+//     // 'https://docs.google.com/spreadsheets/d/1NBjLdRjfgDKFeFg-gQJ094wdppi1HMpZyNSd0MzUSas/edit?gid=0#gid=0',
+//     // 'https://docs.google.com/spreadsheets/d/1n2_c818R24PV9cFnWOz2PF0HnC4pKaEoss--UBVSHtY/edit?gid=1718005552#gid=1718005552',
+//     // 'https://docs.google.com/spreadsheets/d/1tMuQqvnYzjdsh5cMPsEORdFYtOpf-jg6dNMM1Roik3Q/edit?gid=40502416#gid=40502416',
+//     'https://docs.google.com/spreadsheets/d/1VOxuSTYDX7Lt4rdrr4hRZ_EwY6pr9h69iPLHyvae_MU/edit?gid=1139652394#gid=1139652394',
+//     //'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
+//     //'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
+//     //'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
+//     //'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
+//     //'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
+// ];
+
+async function getGoogleSpreadsheetData(urls) {
+    const urlMaps = new Map();
+    const dataParse = new buyDataParse();
+    for (const element of urls) {//一个spread链接获取一次
+        const _ret = await main(element);
+        await dataParse.parse(_ret);
+        //下面是用来打印的
+        for (const [category, items] of _ret) {
+            //console.log(`Category: ${category}`);
+            for(let item of items) {
+                //console.log(`  ${item.link}`);
+                try {
+                    const url = new URL(item.link); // 使用 URL 对象来解析链接
+                    
+                    const hostParts = url.host.split('.');
+                    const host = hostParts.slice(-2).join('.');
+        
+                    // 仅当主机在 hostsName 中时才添加链接
+                    if (!urlMaps.has(host)) {
+                        console.log(`  hostsName ${host}:`, item.link);
+                        urlMaps.set(host, []);
+                    }
+                    //urlMaps.get(host).push(link);
+                } catch (e) {
+                    console.error(`Invalid URL: ${link}:`, e.message);
+                }
+            }
+        }
+        //await buyDataParse(_ret);
+    };
+}
+
+
+
+
 // 执行主函数
- const buy_config = new buyConfig();
- await buy_config.getDomesticUrlByForeignHost("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
- await buy_config.getDomesticUrlByForeignHost("http://tinyurl.com/Burberry-Sneaker");
- await buy_config.getDomesticUrlByForeignHost("https://oopbuy.com/product/0/652894214777");
- await buy_config.getDomesticUrlByForeignHost("https://hoobuy.cc/nE5kJZdR");
- await buy_config.getDomesticUrlByForeignHost("https://hoobuy.com/product/2/7258665479?utm_source=share&utm_medium=product_details");
- await buy_config.getDomesticUrlByForeignHost("https://cssbuy.com/item-micro-7240628629.html");
- await buy_config.getDomesticUrlByForeignHost("https://l.acbuy.com/ax/855771584");
+//  const buy_config = new buyConfig();
+//  await buy_config.getDomesticUrlByForeignHost("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
+//  await buy_config.getDomesticUrlByForeignHost("http://tinyurl.com/Burberry-Sneaker");
+//  await buy_config.getDomesticUrlByForeignHost("https://oopbuy.com/product/0/652894214777");
+//  await buy_config.getDomesticUrlByForeignHost("https://hoobuy.cc/nE5kJZdR");
+//  await buy_config.getDomesticUrlByForeignHost("https://hoobuy.com/product/2/7258665479?utm_source=share&utm_medium=product_details");
+//  await buy_config.getDomesticUrlByForeignHost("https://cssbuy.com/item-micro-7240628629.html");
+//  await buy_config.getDomesticUrlByForeignHost("https://l.acbuy.com/ax/855771584");
 
 //  const cnFans = buy_config.foreignHostParams['cnfans.com'];
 //  const cnFansHandler = buy_config.foreignHostParams['cnfans.com'].handler;
@@ -19,19 +108,7 @@ import axios from 'axios';
 
 // const url = buy_config.getDomesticUrlByForeignHost("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
 // const rawurl = buy_config.getStandardUrls("https://cnfans.com/product/?id=624501840976&shop_type=taobao&ref=131132");
-const urls = [
-    // 'https://docs.google.com/spreadsheets/d/1d8d3BLMxaUomRufs6aWnssNY5RWEXPl5kbUO-8Be-5Y/edit?gid=402318860#gid=402318860',
-    // 'https://docs.google.com/spreadsheets/d/1UWW5tnFU_9ENnHjScnC7ohWx9bgwER92gSEvV57dJlk/edit?gid=0#gid=0',
-    // 'https://docs.google.com/spreadsheets/d/1NBjLdRjfgDKFeFg-gQJ094wdppi1HMpZyNSd0MzUSas/edit?gid=0#gid=0',
-    // 'https://docs.google.com/spreadsheets/d/1n2_c818R24PV9cFnWOz2PF0HnC4pKaEoss--UBVSHtY/edit?gid=1718005552#gid=1718005552',
-    // 'https://docs.google.com/spreadsheets/d/1tMuQqvnYzjdsh5cMPsEORdFYtOpf-jg6dNMM1Roik3Q/edit?gid=40502416#gid=40502416',
-    'https://docs.google.com/spreadsheets/d/1VOxuSTYDX7Lt4rdrr4hRZ_EwY6pr9h69iPLHyvae_MU/edit?gid=1139652394#gid=1139652394',
-    //'https://docs.google.com/spreadsheets/d/1JOXfU9hnjo3o6ZCWfMhDPOWswvxVIXPh9RkaYhmXW7E/edit?gid=0#gid=0',
-    //'https://docs.google.com/spreadsheets/d/1RnU7VEYMHnBRVF65gEDzBXV7jFHLRitDvj-Ep50FAsM/edit?gid=98437900#gid=98437900',
-    //'https://docs.google.com/spreadsheets/d/1q6FFJxxYpaO9CAinecgpaC5StLA1PkgAFcz11a2XIKo/edit?gid=0#gid=0',
-    //'https://docs.google.com/spreadsheets/d/10kTV6P11KYR0XNR7vd1yZMyvrQFeLqpeLdNPn72gQcI/edit?gid=1033818333#gid=1033818333',
-    //'https://docs.google.com/spreadsheets/d/1js0mFBlC0070YD2qaN57HKXtGtQwDmxCWpZgpmXG5uM/edit?gid=0#gid=0&fvid=2076329314',
-];
+
 
 // const url = 'https://cssbuy.com/item-7240628629.html';
 // // 使用正则表达式提取信息
@@ -69,35 +146,7 @@ const urls = [
 // await instance.get('http://tinyurl.com/Burberry-Sneaker');
 // console.log("url:",url);
 
-const urlMaps = new Map();
-const dataParse = new buyDataParse();
-for (const element of urls) {//一个spread链接获取一次
-    const _ret = await main(element);
-    await dataParse.parse(_ret);
-    //下面是用来打印的
-    for (const [category, items] of _ret) {
-        //console.log(`Category: ${category}`);
-        for(let item of items) {
-            //console.log(`  ${item.link}`);
-            try {
-                const url = new URL(item.link); // 使用 URL 对象来解析链接
-                
-                const hostParts = url.host.split('.');
-                const host = hostParts.slice(-2).join('.');
-    
-                // 仅当主机在 hostsName 中时才添加链接
-                if (!urlMaps.has(host)) {
-                    console.log(`  hostsName ${host}:`, item.link);
-                    urlMaps.set(host, []);
-                }
-                //urlMaps.get(host).push(link);
-            } catch (e) {
-                console.error(`Invalid URL: ${link}:`, e.message);
-            }
-        }
-    }
-    //await buyDataParse(_ret);
-};
+
 
 // const dataParse = new buyDataParse();
 //await getDataFromTaobao("https://item.taobao.com/item.htm?id=772459929808");
