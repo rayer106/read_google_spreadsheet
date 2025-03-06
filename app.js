@@ -17,25 +17,29 @@ app.use(express.json());
  */
 app.post('/fetchData', (req, res) => {
     // Interaction type and data
-    const { type, data } = req.body;
+    const { type, user_id, data } = req.body;
     console.log(req.body);
-    if (type === 1) {//这里是处理google spreadsheet
+    if (type == 1) {//这里是处理google spreadsheet
         try {
             //const result = this.getGoogleSpreadsheetData(data);
-            return res.json({ success: true, result: data[0] });
+            const ret = { success: true, result: {"user_id":user_id,"goods_list":data[0]}};
+            console.log(ret);
+            return res.json(ret);
         } catch (error) {
             //console.error(error.message);
             return res.status(400).json({ success: false, message: error.message });
         }
     }
 
-    if(type === 2){//这里是处理多个商品链接
+    if(type == 2){//这里是处理多个商品链接
         const goodsList = new Set();
         for(const item of data) {
             //const goods = this.getGoods(item);
-            goodsList.push(item);
+            goodsList.add(item);
         }
-        return res.send({ success: true, result: goodsList });
+        const ret = { success: true, result: {"user_id":user_id,"goods_list":Array.from(goodsList)}};
+        console.log(ret);
+        return res.json(ret);
     }
 
     console.error('unknown interaction type', type);
