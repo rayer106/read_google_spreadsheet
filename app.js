@@ -32,7 +32,7 @@ app.post('/fetchData', (req, res) => {
     if(type === 2){//这里是处理多个商品链接
         const goodsList = new Set();
         for(const item of data) {
-            const goods = this.getGoods(item);
+            //const goods = this.getGoods(item);
             goodsList.push(goods);
         }
         return res.send({ success: true, result: goodsList });
