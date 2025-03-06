@@ -33,7 +33,7 @@ app.post('/fetchData', (req, res) => {
         const goodsList = new Set();
         for(const item of data) {
             //const goods = this.getGoods(item);
-            goodsList.push(goods);
+            goodsList.push(item);
         }
         return res.send({ success: true, result: goodsList });
     }
